@@ -7,11 +7,11 @@ import cv2
 from keras.models import Sequential
 from keras.layers import Convolution2D, ELU, Flatten, Dropout, Dense, BatchNormalization
 from keras.preprocessing.image import img_to_array, load_img
-from keras.regularizers import l2
+from keras.utils.visualize_util import plot
 
 from sklearn.model_selection import train_test_split
-import random
-import math
+import scipy.misc
+import pylab
 
 image_shape = (80, 80, 3) # original shape (160, 320, 3)
 
@@ -83,6 +83,8 @@ def nvidia_model():
 
     # debugging
     # model.summary()
+    # plot(model, to_file='model.png', show_shapes=True)
+
 
     return model
 
@@ -96,7 +98,7 @@ def sample_extractor (row, camera):
     img = load_img("data/" + row[camera].strip())
     image = img_to_array(img)
 
-    # stearing
+    # steering
     steering_angle = row['steering']
 
     return image, steering_angle, camera
@@ -159,7 +161,11 @@ def sample_preprocessor(sample):
     # flipping images and angle randomly
     image, steering_angle = image_flipper (image, steering_angle)
 
+    # saves proccesed image to disc
+    #scipy.misc.imsave('outfile.jpg', image)
+
     return image, steering_angle
+
 
 'GENERATOR'
 def batch_generator (data, batch_size):
@@ -191,6 +197,7 @@ def batch_generator (data, batch_size):
 
         yield image_batch, steering_batch
 
+
 'MAIN'
 if __name__ == "__main__":
 
@@ -198,6 +205,10 @@ if __name__ == "__main__":
     # loads colums center, left, right, and steering from Udacity dataset
     with open('data/driving_log.csv') as file:
         data_frame = pd.read_csv(file, usecols=[0, 1, 2, 3])
+
+    # # plots histogram of steering angles
+    # plot = data_frame['steering'].plot.hist()
+    # pylab.savefig('plot.png')
 
     # creats randomly a 75% training data set and a 25% validation data set for testing
     split = 0.75
@@ -222,6 +233,7 @@ if __name__ == "__main__":
                 #, metrics = metric
                 )
 
+
     'DATA GENERATION'
     batch_size = 32
 
@@ -230,6 +242,7 @@ if __name__ == "__main__":
 
     training_data_generator = batch_generator(training_data, batch_size)
     validation_data_generator = batch_generator(validation_data, batch_size)
+
 
     'TRAINING'
     number_epochs = 8
